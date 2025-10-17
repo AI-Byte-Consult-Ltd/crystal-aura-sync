@@ -16,8 +16,20 @@ interface NFTMetadata {
   }>;
 }
 
+// Default IPFS hash to load on startup
+const DEFAULT_IPFS_HASH = 'ipfs://bafkreiaoztmsa2lubeqxvpztsftwutwpe7kcm5fnqjdmxjnqkndq5ejrsq';
+
+// Convert IPFS URLs to HTTP gateway URLs
+const convertIpfsToHttp = (url: string): string => {
+  if (url.startsWith('ipfs://')) {
+    const hash = url.replace('ipfs://', '');
+    return `https://ipfs.io/ipfs/${hash}`;
+  }
+  return url;
+};
+
 const Index = () => {
-  const [metadataUrl, setMetadataUrl] = useState('');
+  const [metadataUrl, setMetadataUrl] = useState(DEFAULT_IPFS_HASH);
   const [metadata, setMetadata] = useState<NFTMetadata | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const { toast } = useToast();
@@ -42,7 +54,8 @@ const Index = () => {
 
     setIsLoading(true);
     try {
-      const response = await fetch(url);
+      const httpUrl = convertIpfsToHttp(url);
+      const response = await fetch(httpUrl);
       if (!response.ok) {
         throw new Error('Failed to fetch metadata');
       }
@@ -69,6 +82,11 @@ const Index = () => {
   const handleLoadCrystal = () => {
     fetchMetadata(metadataUrl);
   };
+
+  // Auto-load default IPFS metadata on mount
+  useEffect(() => {
+    fetchMetadata(DEFAULT_IPFS_HASH);
+  }, [fetchMetadata]);
 
   // Auto-refresh every 60 seconds
   useEffect(() => {
@@ -107,13 +125,13 @@ const Index = () => {
       <div className="w-full max-w-2xl mb-16 relative z-10">
         <div className="glass rounded-2xl p-6 space-y-4">
           <label htmlFor="metadata-url" className="text-sm font-medium text-foreground block">
-            NFT Metadata URL
+            NFT Metadata URL (IPFS or HTTP)
           </label>
           <div className="flex gap-3">
             <Input
               id="metadata-url"
-              type="url"
-              placeholder="https://example.com/metadata.json"
+              type="text"
+              placeholder="ipfs://... or https://..."
               value={metadataUrl}
               onChange={(e) => setMetadataUrl(e.target.value)}
               onKeyDown={(e) => e.key === 'Enter' && handleLoadCrystal()}
@@ -136,35 +154,11 @@ const Index = () => {
             </Button>
           </div>
           
-          {/* Example URLs */}
+          {/* Example note */}
           <div className="pt-2">
-            <p className="text-xs text-muted-foreground mb-2">Try example metadata:</p>
-            <div className="flex flex-wrap gap-2">
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => setMetadataUrl('https://raw.githubusercontent.com/example/metadata/calm.json')}
-                className="text-xs border-primary/30 hover:border-primary hover:bg-primary/10"
-              >
-                Calm Crystal
-              </Button>
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => setMetadataUrl('https://raw.githubusercontent.com/example/metadata/angry.json')}
-                className="text-xs border-destructive/30 hover:border-destructive hover:bg-destructive/10"
-              >
-                Angry Crystal
-              </Button>
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => setMetadataUrl('https://raw.githubusercontent.com/example/metadata/mystic.json')}
-                className="text-xs border-secondary/30 hover:border-secondary hover:bg-secondary/10"
-              >
-                Mystic Crystal
-              </Button>
-            </div>
+            <p className="text-xs text-muted-foreground">
+              Supports both IPFS URLs (ipfs://...) and HTTP URLs. Auto-converts IPFS to gateway URLs.
+            </p>
           </div>
         </div>
       </div>
