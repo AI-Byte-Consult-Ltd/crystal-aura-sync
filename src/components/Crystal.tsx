@@ -1,5 +1,14 @@
 import { useEffect, useRef } from 'react';
 
+// Convert IPFS URLs to HTTP gateway URLs
+const convertIpfsToHttp = (url: string): string => {
+  if (url.startsWith('ipfs://')) {
+    const hash = url.replace('ipfs://', '');
+    return `https://ipfs.io/ipfs/${hash}`;
+  }
+  return url;
+};
+
 interface CrystalProps {
   metadata: {
     mood?: string;
@@ -13,12 +22,15 @@ export const Crystal = ({ metadata }: CrystalProps) => {
   const crystalRef = useRef<HTMLDivElement | HTMLImageElement>(null);
 
   useEffect(() => {
+    console.log('Crystal component received metadata:', metadata);
     if (!crystalRef.current || !metadata) return;
 
     const crystal = crystalRef.current;
     const mood = metadata.mood || 'calm';
     const energy = metadata.energy || 0.5;
     const color = metadata.color || '#44baff';
+
+    console.log('Applying crystal effects - mood:', mood, 'energy:', energy, 'color:', color);
 
     // Set CSS variable for glow color
     crystal.style.setProperty('--glow-color', color);
@@ -43,19 +55,21 @@ export const Crystal = ({ metadata }: CrystalProps) => {
 
   if (!metadata) {
     return (
-      <div className="crystal-container flex items-center justify-center">
-        <div className="text-muted-foreground text-lg">
-          Enter a metadata URL to activate the crystal
+      <div className="flex items-center justify-center min-h-[600px]">
+        <div className="text-muted-foreground text-xl">
+          Loading crystal...
         </div>
       </div>
     );
   }
 
+  console.log('Rendering crystal with metadata:', metadata);
+
   return (
-    <div className="crystal-container flex items-center justify-center relative">
+    <div className="flex items-center justify-center relative min-h-[70vh]">
       {/* Ambient glow rings */}
       <div className="absolute inset-0 flex items-center justify-center">
-        <div className="w-[400px] h-[400px] rounded-full bg-primary/5 blur-3xl animate-pulse-glow" 
+        <div className="w-[600px] h-[600px] rounded-full bg-primary/5 blur-3xl animate-pulse-glow" 
              style={{ '--glow-color': metadata.color || '#44baff' } as React.CSSProperties} />
       </div>
       
@@ -63,14 +77,14 @@ export const Crystal = ({ metadata }: CrystalProps) => {
       {metadata.image ? (
         <img
           ref={crystalRef as React.RefObject<HTMLImageElement>}
-          src={metadata.image}
+          src={convertIpfsToHttp(metadata.image)}
           alt="Memory Crystal"
-          className="crystal-orb relative z-10 w-64 h-64 object-contain rounded-full transition-all duration-1000"
+          className="crystal-orb relative z-10 w-96 h-96 object-contain rounded-full transition-all duration-1000"
         />
       ) : (
         <div
           ref={crystalRef as React.RefObject<HTMLDivElement>}
-          className="crystal-orb relative z-10 w-64 h-64 rounded-full glass transition-all duration-1000"
+          className="crystal-orb relative z-10 w-96 h-96 rounded-full glass transition-all duration-1000"
           style={{
             background: `radial-gradient(circle, ${metadata.color || '#44baff'}40, transparent)`,
             boxShadow: `0 0 60px ${metadata.color || '#44baff'}80, 0 0 100px ${metadata.color || '#44baff'}40, inset 0 0 60px ${metadata.color || '#44baff'}30`,

@@ -55,12 +55,15 @@ const Index = () => {
     setIsLoading(true);
     try {
       const httpUrl = convertIpfsToHttp(url);
+      console.log('Fetching metadata from:', httpUrl);
       const response = await fetch(httpUrl);
       if (!response.ok) {
         throw new Error('Failed to fetch metadata');
       }
       const data = await response.json();
+      console.log('Raw metadata received:', data);
       const parsed = parseMetadata(data);
+      console.log('Parsed metadata:', parsed);
       setMetadata(parsed);
       
       toast({
@@ -85,6 +88,7 @@ const Index = () => {
 
   // Auto-load default IPFS metadata on mount
   useEffect(() => {
+    console.log('Auto-loading default IPFS metadata');
     fetchMetadata(DEFAULT_IPFS_HASH);
   }, [fetchMetadata]);
 
@@ -164,7 +168,7 @@ const Index = () => {
       </div>
 
       {/* Crystal display */}
-      <div className="relative z-10 w-full max-w-4xl">
+      <div className="relative z-10 w-full">
         <Crystal metadata={metadata} />
       </div>
 
